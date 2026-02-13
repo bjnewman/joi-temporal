@@ -2,6 +2,10 @@
 
 Joi extension for validating and coercing [Temporal API](https://tc39.es/proposal-temporal/docs/) types.
 
+[![npm version](https://img.shields.io/npm/v/@bjnewman/joi-temporal)](https://www.npmjs.com/package/@bjnewman/joi-temporal)
+[![CI](https://img.shields.io/github/actions/workflow/status/bjnewman/joi-temporal/ci.yml?branch=main&label=CI)](https://github.com/bjnewman/joi-temporal/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 ```ts
 import Joi from "joi";
 import joiTemporal from "@bjnewman/joi-temporal";
@@ -25,17 +29,41 @@ value.time instanceof Temporal.PlainTime; // true
 value.duration instanceof Temporal.Duration; // true
 ```
 
+## Why not @joi/date or joi-luxon?
+
+Joi's existing date extensions (`@joi/date`, `@reis/joi-luxon`, `joi-date-dayjs`) all coerce to either `Date`, Luxon `DateTime`, or Day.js objects — and each comes with trade-offs:
+
+| | @joi/date | @reis/joi-luxon | joi-temporal |
+|---|---|---|---|
+| **Coerces to** | `Date` | Luxon `DateTime` | Temporal types |
+| **Timezones** | `.utc()` only | Yes (via Luxon) | Native `ZonedDateTime` |
+| **Durations** | No | No | `Temporal.Duration` with `.positive()`, `.min()`, `.max()` |
+| **Distinct date vs time** | No — everything is `Date` | No — everything is `DateTime` | `PlainDate`, `PlainTime`, `PlainDateTime`, `Instant`, etc. |
+| **Runtime dep** | moment (format parsing) | Luxon | None — uses the platform |
+| **Future** | moment is deprecated | Luxon is maintained | Temporal is a [TC39 standard](https://tc39.es/proposal-temporal/docs/), shipping in Chrome 137+, Firefox 139+, Node.js 22+ |
+
+The [Temporal API](https://tc39.es/proposal-temporal/docs/) is the JavaScript standard that replaces `Date`. It's already native in major browsers and Node.js, and production-grade polyfills like [`temporal-polyfill`](https://www.npmjs.com/package/temporal-polyfill) make it usable everywhere else today. Unlike library-specific types, Temporal objects are what the rest of the ecosystem is converging on.
+
+- **Strings in, Temporal objects out** — ISO 8601 strings from JSON payloads are coerced to real Temporal instances. No manual parsing.
+- **Feels native to Joi** — same `.min()`, `.max()`, `.required()`, `.messages()` chaining you already know.
+- **All 8 Temporal types** — the right type for each use case instead of stuffing everything into `Date`.
+- **Zero dependencies** — just your Joi peer dependency and a Temporal runtime.
+- **`"now"` comparators** — `.min("now")` resolves at validation time, not schema construction time.
+- **Polyfill now, native later** — swap the polyfill for native Temporal support with zero code changes.
+
 ## Install
 
 ```bash
 npm install @bjnewman/joi-temporal
 ```
 
-**Requires the Temporal API at runtime.** Use one of:
+You'll also need the Temporal API available at runtime. Pick one:
 
-- Node.js 22+ with `--harmony-temporal`
-- Chrome 144+ / Firefox 139+ (native)
-- A polyfill: [`temporal-polyfill`](https://www.npmjs.com/package/temporal-polyfill) or [`@js-temporal/polyfill`](https://www.npmjs.com/package/@js-temporal/polyfill)
+| Environment | How to enable |
+|---|---|
+| **Node.js 22+** | `node --harmony-temporal app.js` |
+| **Chrome 137+** / **Firefox 139+** | Ships natively |
+| **Everywhere else** | `npm install temporal-polyfill` and `import "temporal-polyfill/global"` at your entry point |
 
 **Peer dependency:** `joi >= 17.0.0`
 
@@ -54,7 +82,9 @@ npm install @bjnewman/joi-temporal
 
 All types coerce from ISO 8601 strings and pass through existing Temporal instances.
 
-## Comparison Rules
+## API
+
+### Comparison Rules
 
 Available on all types except `plainMonthDay`:
 
@@ -67,9 +97,9 @@ custom.plainDate().gte("2020-01-01")   // alias for .min()
 custom.plainDate().lte("2025-12-31")   // alias for .max()
 ```
 
-Comparators accept ISO strings or Temporal instances. `plainDate`, `plainDateTime`, and `plainTime` also accept `"now"` as a comparator, resolved at validation time.
+Comparators accept ISO strings or Temporal instances. `plainDate`, `plainDateTime`, and `plainTime` also accept `"now"`.
 
-## Duration-Specific Rules
+### Duration Rules
 
 ```ts
 custom.duration().positive()   // sign must be > 0
@@ -79,17 +109,15 @@ custom.duration().min("PT1H")  // at least 1 hour
 custom.duration().max("P1D")   // at most 1 day
 ```
 
-## ZonedDateTime Timezone Rule
+### ZonedDateTime Timezone
 
 ```ts
 custom.zonedDateTime().timezone("America/New_York")
 ```
 
-Requires the value to be in a specific IANA timezone.
-
 ## Usage with Hapi
 
-joi-temporal works as a drop-in with Hapi's route validation. Temporal objects arrive as ISO strings in JSON request payloads — the extension coerces them before your handler runs.
+ISO strings in JSON payloads are coerced to Temporal objects before your handler runs:
 
 ```ts
 import Hapi from "@hapi/hapi";
@@ -98,87 +126,31 @@ import joiTemporal from "@bjnewman/joi-temporal";
 
 const custom = Joi.extend(...joiTemporal);
 
-const server = Hapi.server({ port: 3000 });
-
 server.route({
     method: "POST",
     path: "/bookings",
     options: {
         validate: {
             payload: custom.object({
-                date: custom.plainDate()
-                    .min("now")
-                    .max("2026-12-31")
-                    .required(),
-                startTime: custom.plainTime()
-                    .min("09:00")
-                    .max("17:00")
-                    .required(),
-                duration: custom.duration()
-                    .positive()
-                    .min("PT30M")
-                    .max("PT4H")
-                    .required(),
-                timezone: custom.zonedDateTime()
-                    .timezone("America/New_York")
-                    .optional(),
+                date: custom.plainDate().min("now").max("2026-12-31").required(),
+                startTime: custom.plainTime().min("09:00").max("17:00").required(),
+                duration: custom.duration().positive().min("PT30M").max("PT4H").required(),
             }),
         },
     },
     handler(request) {
         const { date, startTime, duration } = request.payload;
-
-        // These are already Temporal objects — no parsing needed
-        const end = startTime.add(duration);
-
-        return {
-            booking: {
-                date: date.toString(),
-                start: startTime.toString(),
-                end: end.toString(),
-            },
-        };
+        const end = startTime.add(duration); // already Temporal objects
+        return { date: date.toString(), start: startTime.toString(), end: end.toString() };
     },
 });
 ```
 
-Valid request:
-
-```json
-{
-    "date": "2026-04-15",
-    "startTime": "10:00",
-    "duration": "PT1H30M"
-}
-```
-
-Invalid request — Hapi returns a 400 with Joi's error details automatically:
-
-```json
-{
-    "date": "2020-01-01",
-    "startTime": "22:00",
-    "duration": "PT12H"
-}
-```
-
 ## Usage with React Hook Form
 
-For browser-side validation with [React Hook Form](https://react-hook-form.com/) and [@hookform/resolvers](https://github.com/react-hook-form/resolvers), add a Temporal polyfill to your app entry point and use the Joi resolver.
-
-```bash
-npm install react-hook-form @hookform/resolvers joi @bjnewman/joi-temporal temporal-polyfill
-```
-
-Add the polyfill import at your app entry point (e.g., `main.tsx`):
+Works with [@hookform/resolvers](https://github.com/react-hook-form/resolvers) and HTML date/time inputs, which produce ISO strings that joi-temporal coerces automatically:
 
 ```ts
-import "temporal-polyfill/global";
-```
-
-Then use it in a form component:
-
-```tsx
 import { useForm } from "react-hook-form";
 import { joiResolver } from "@hookform/resolvers/joi";
 import Joi from "joi";
@@ -187,69 +159,16 @@ import joiTemporal from "@bjnewman/joi-temporal";
 const custom = Joi.extend(...joiTemporal);
 
 const schema = custom.object({
-    startDate: custom.plainDate()
-        .min("now")
-        .required()
-        .messages({
-            "temporal.plainDate.base": "Please enter a valid date (YYYY-MM-DD)",
-            "temporal.plainDate.min": "Date must be today or later",
-            "any.required": "Start date is required",
-        }),
-    endDate: custom.plainDate()
-        .min("now")
-        .required(),
-    meetingTime: custom.plainTime()
-        .min("08:00")
-        .max("18:00")
-        .required()
-        .messages({
-            "temporal.plainTime.min": "Must be during business hours (8am–6pm)",
-            "temporal.plainTime.max": "Must be during business hours (8am–6pm)",
-        }),
+    startDate: custom.plainDate().min("now").required()
+        .messages({ "temporal.plainDate.min": "Date must be today or later" }),
+    meetingTime: custom.plainTime().min("08:00").max("18:00").required()
+        .messages({ "temporal.plainTime.min": "Must be during business hours" }),
 });
 
-export function BookingForm() {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm({
-        resolver: joiResolver(schema),
-    });
-
-    const onSubmit = (data) => {
-        // data.startDate is a Temporal.PlainDate
-        // data.meetingTime is a Temporal.PlainTime
-        console.log(data.startDate.toString());
-    };
-
-    return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <div>
-                <label htmlFor="startDate">Start Date</label>
-                <input id="startDate" type="date" {...register("startDate")} />
-                {errors.startDate && <span>{errors.startDate.message}</span>}
-            </div>
-
-            <div>
-                <label htmlFor="endDate">End Date</label>
-                <input id="endDate" type="date" {...register("endDate")} />
-                {errors.endDate && <span>{errors.endDate.message}</span>}
-            </div>
-
-            <div>
-                <label htmlFor="meetingTime">Meeting Time</label>
-                <input id="meetingTime" type="time" {...register("meetingTime")} />
-                {errors.meetingTime && <span>{errors.meetingTime.message}</span>}
-            </div>
-
-            <button type="submit">Book</button>
-        </form>
-    );
-}
+const { register, handleSubmit } = useForm({ resolver: joiResolver(schema) });
+// <input type="date" {...register("startDate")} />
+// <input type="time" {...register("meetingTime")} />
 ```
-
-HTML `<input type="date">` produces `"YYYY-MM-DD"` strings and `<input type="time">` produces `"HH:MM"` strings — both are valid ISO 8601 that joi-temporal coerces automatically.
 
 ## Error Messages
 
