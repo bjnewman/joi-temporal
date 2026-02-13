@@ -1,0 +1,15 @@
+{
+  "name": "joi-temporal-node-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node --import temporal-polyfill/global server.js",
+    "demo": "node --import temporal-polyfill/global demo.js"
+  },
+  "dependencies": {
+    "@hapi/hapi": "^21.3.0",
+    "joi": "^17.13.0",
+    "@bjn/joi-temporal": "file:../../",
+    "temporal-polyfill": "^0.2.5"
+  }
+}

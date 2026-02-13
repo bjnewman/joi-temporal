@@ -1,0 +1,61 @@
+{
+  "name": "@bjn/joi-temporal",
+  "version": "0.1.0",
+  "description": "Joi extension for Temporal API types",
+  "author": "Ben Newman",
+  "type": "module",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "c8 node --import temporal-polyfill/global --import tsx --test test/**/*.test.ts",
+    "lint": "oxlint",
+    "type:check": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "joi",
+    "temporal",
+    "validation",
+    "schema",
+    "date",
+    "time",
+    "duration",
+    "typescript"
+  ],
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bjnewman/joi-temporal.git"
+  },
+  "peerDependencies": {
+    "joi": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@tsconfig/node22": "^22.0.0",
+    "c8": "^10.1.0",
+    "joi": "^17.13.0",
+    "oxlint": "^0.16.0",
+    "semantic-release": "^25.0.3",
+    "temporal-polyfill": "^0.2.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.0"
+  }
+}
