@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/bjnewman/joi-temporal/compare/v1.0.0...v1.0.1) (2026-02-13)
+
+
+### Bug Fixes
+
+* add setup-node to CI for node 22 glob support ([38f15b1](https://github.com/bjnewman/joi-temporal/commit/38f15b12093676cbfc98edae2e59561df7dd478b))
+
 # 1.0.0 (2026-02-13)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@bjnewman/joi-temporal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Joi extension for Temporal API types",
   "author": "Ben Newman",
   "type": "module",
