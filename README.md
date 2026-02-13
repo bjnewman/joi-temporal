@@ -4,7 +4,7 @@ Joi extension for validating and coercing [Temporal API](https://tc39.es/proposa
 
 ```ts
 import Joi from "joi";
-import joiTemporal from "@bjn/joi-temporal";
+import joiTemporal from "@bjnewman/joi-temporal";
 
 const custom = Joi.extend(...joiTemporal);
 
@@ -28,7 +28,7 @@ value.duration instanceof Temporal.Duration; // true
 ## Install
 
 ```bash
-npm install @bjn/joi-temporal
+npm install @bjnewman/joi-temporal
 ```
 
 **Requires the Temporal API at runtime.** Use one of:
@@ -94,7 +94,7 @@ joi-temporal works as a drop-in with Hapi's route validation. Temporal objects a
 ```ts
 import Hapi from "@hapi/hapi";
 import Joi from "joi";
-import joiTemporal from "@bjn/joi-temporal";
+import joiTemporal from "@bjnewman/joi-temporal";
 
 const custom = Joi.extend(...joiTemporal);
 
@@ -167,7 +167,7 @@ Invalid request — Hapi returns a 400 with Joi's error details automatically:
 For browser-side validation with [React Hook Form](https://react-hook-form.com/) and [@hookform/resolvers](https://github.com/react-hook-form/resolvers), add a Temporal polyfill to your app entry point and use the Joi resolver.
 
 ```bash
-npm install react-hook-form @hookform/resolvers joi @bjn/joi-temporal temporal-polyfill
+npm install react-hook-form @hookform/resolvers joi @bjnewman/joi-temporal temporal-polyfill
 ```
 
 Add the polyfill import at your app entry point (e.g., `main.tsx`):
@@ -182,7 +182,7 @@ Then use it in a form component:
 import { useForm } from "react-hook-form";
 import { joiResolver } from "@hookform/resolvers/joi";
 import Joi from "joi";
-import joiTemporal from "@bjn/joi-temporal";
+import joiTemporal from "@bjnewman/joi-temporal";
 
 const custom = Joi.extend(...joiTemporal);
 

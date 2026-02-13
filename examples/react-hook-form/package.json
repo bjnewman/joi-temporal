@@ -9,7 +9,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.0.0",
     "joi": "^17.13.0",
-    "@bjn/joi-temporal": "file:../../",
+    "@bjnewman/joi-temporal": "file:../../",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.0",

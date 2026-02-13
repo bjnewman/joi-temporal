@@ -4,7 +4,7 @@
  *   node --import temporal-polyfill/global demo.js
  */
 import Joi from "joi";
-import joiTemporal from "@bjn/joi-temporal";
+import joiTemporal from "@bjnewman/joi-temporal";
 
 const custom = Joi.extend(...joiTemporal);
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A Joi extension library (`@bjn/joi-temporal`) that validates and coerces [Temporal API](https://tc39.es/proposal-temporal/docs/) types. It exports an array of Joi extension factories — one per Temporal type — spread into `Joi.extend(...joiTemporal)`.
+A Joi extension library (`@bjnewman/joi-temporal`) that validates and coerces [Temporal API](https://tc39.es/proposal-temporal/docs/) types. It exports an array of Joi extension factories — one per Temporal type — spread into `Joi.extend(...joiTemporal)`.
 
 Requires `globalThis.Temporal` at runtime (native or polyfill). Peer dependency on `joi >= 17`.
 

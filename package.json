@@ -1,5 +1,5 @@
 {
-  "name": "@bjn/joi-temporal",
+  "name": "@bjnewman/joi-temporal",
   "version": "0.1.0",
   "description": "Joi extension for Temporal API types",
   "author": "Ben Newman",
